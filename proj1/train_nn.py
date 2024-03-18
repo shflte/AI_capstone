@@ -62,7 +62,7 @@ def train(model, device, train_loader, criterion, optimizer, num_epochs):
 
 def main():
     TRAIN_PATH = '.'
-    LABEL_FILE = 'label.txt'
+    LABEL_FILE = 'label_nn.txt'
     BATCH_SIZE = 32
     NUM_EPOCHS = 10
     device = torch.device("cpu")
