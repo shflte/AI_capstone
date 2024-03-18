@@ -1,0 +1,4 @@
+models/
+captcha_img
+*.png
+*.txt
