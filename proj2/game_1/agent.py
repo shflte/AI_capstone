@@ -37,8 +37,6 @@ class GameInteraction:
             return (-1, 1)
         elif dir == 4:
             return (0, -1)
-        elif dir == 5:
-            return (0, 0)
         elif dir == 6:
             return (0, 1)
         elif dir == 7:
@@ -48,7 +46,7 @@ class GameInteraction:
         elif dir == 9:
             return (1, 1)
 
-    # probe the direction until out of the map or hit something that is not 0
+    # probe the direction until reach the boundary of the map or hit something that is not 0
     def probe_direction(self, x, y, dir, mapStat):
         dx, dy = self.dir_value(dir)
         while True:
@@ -88,15 +86,16 @@ class GameInteraction:
         splitable_sheep = []
         for i in range(height):
             for j in range(width):
-                if mapStat[i][j] == playerID and sheepStat[i][j] > 1:
+                if mapStat[i][j] == playerID and int(sheepStat[i][j]) > 1:
                     splitable_sheep.append((i, j))
         # for each splitable sheep group, generate all possible actions
         for i, j in splitable_sheep:
-            for m in range(1, sheepStat[i][j]):
-                for dir in self.possible_dir():
-                    newx, newy = self.probe_direction(i, j, dir, mapStat)
-                    if newx != i or newy != j:
-                        actions.append([(i, j), m, dir])
+            for dir in self.possible_dir():
+                newx, newy = self.probe_direction(i, j, dir, mapStat)
+                if newx == i and newy == j:
+                    continue
+                for m in range(1, int(sheepStat[i][j])):
+                    actions.append([(i, j), m, dir])
 
         return actions
 
@@ -159,17 +158,16 @@ class MCTS:
         return self.get_best_action(root, best_child)
 
     def get_best_action(self, root, best_child):
-        # 这里根据实际需要返回最佳动作
+        for child in root.children:
+            if child == best_child:
+                return self.get_action_from_nodes(root.state, child.state)
         return None
 
     def get_possible_actions(self, state):
-        # 根据当前状态返回所有可能的动作
-        return []
-    
-    def apply_action(self, state, action):
-        
+        return GameInteraction().get_possible_actions(state)
 
-        return state
+    def apply_action(self, state, action):
+        return GameInteraction().apply_action(state, action)
 
 '''
     選擇起始位置
@@ -183,61 +181,73 @@ def InitPos(mapStat):
     init_pos = [0, 0]
     height, width = len(mapStat), len(mapStat[0])
     
-    # randomly choose a position on the edge of the map
-    for i in range(height):
-        if mapStat[i][0] == -1:
-            init_pos = [i, 0]
-            break
-        elif mapStat[i][width - 1] == -1:
-            init_pos = [i, width - 1]
-            break
-    for j in range(width):
-        if mapStat[0][j] == -1:
-            init_pos = [0, j]
-            break
-        elif mapStat[height - 1][j] == -1:
-            init_pos = [height - 1, j]
-            break
+    # # randomly choose a position on the edge of the map
+    # for i in range(height):
+    #     if mapStat[i][0] == -1:
+    #         init_pos = [i, 0]
+    #         break
+    #     elif mapStat[i][width - 1] == -1:
+    #         init_pos = [i, width - 1]
+    #         break
+    # for j in range(width):
+    #     if mapStat[0][j] == -1:
+    #         init_pos = [0, j]
+    #         break
+    #     elif mapStat[height - 1][j] == -1:
+    #         init_pos = [height - 1, j]
+    #         break
     
     return init_pos
 
 def GetStep(playerID, mapStat, sheepStat):
-    mcts = MCTS((playerID, mapStat, sheepStat))
-    best_action = mcts.get_action()
-    step = [(best_action[0], best_action[1]), best_action[2], best_action[3]]
+    # mcts = MCTS((playerID, mapStat, sheepStat))
+    # best_action = mcts.get_action()
+    # step = [(best_action[0], best_action[1]), best_action[2], best_action[3]]
+
+    # randomly choose an action
+    all_actions = GameInteraction().get_possible_actions((playerID, mapStat, sheepStat))
+    step = random.choice(all_actions)
 
     return step
 
 
 # player initial
-# (id_package, playerID, mapStat) = STcpClient.GetMap()
-# init_pos = InitPos(mapStat)
-# STcpClient.SendInitPos(id_package, init_pos)
+(id_package, playerID, mapStat) = STcpClient.GetMap()
+init_pos = InitPos(mapStat)
+STcpClient.SendInitPos(id_package, init_pos)
 
 # start game
-# while (True):
-#     (end_program, id_package, mapStat, sheepStat) = STcpClient.GetBoard()
-#     if end_program:
-#         STcpClient._StopConnect()
-#         break
-#     Step = GetStep(playerID, mapStat, sheepStat)
+count = 0
+while (count < 30):
+    count += 1
+    (end_program, id_package, mapStat, sheepStat) = STcpClient.GetBoard()
+    # append the board state to ./state.txt
+    with open('./state.txt', 'a') as f:
+        f.write(str(mapStat) + '\n')
+        f.write(str(sheepStat) + '\n')
+        f.write('\n')
 
-#     STcpClient.SendStep(id_package, Step)
+    if end_program:
+        STcpClient._StopConnect()
+        break
+    Step = GetStep(playerID, mapStat, sheepStat)
+
+    STcpClient.SendStep(id_package, Step)
 
 
-# generate a toy 12 * 12 toy mapStat
-mapStat = [[0 for _ in range(12)] for _ in range(12)]
-# generate a toy 12 * 12 toy sheepStat
-sheepStat = [[0 for _ in range(12)] for _ in range(12)]
+# # generate a toy 12 * 12 toy mapStat
+# mapStat = [[0 for _ in range(12)] for _ in range(12)]
+# # generate a toy 12 * 12 toy sheepStat
+# sheepStat = [[0 for _ in range(12)] for _ in range(12)]
 
-# player 2 has 10 sheep at (1, 1), 6 sheep at (3, 3)
-mapStat[0][0] = 2
-sheepStat[0][0] = 2
-mapStat[1][0] = 2
-sheepStat[1][0] = 1
-mapStat[0][1] = 2
-sheepStat[0][1] = 1
+# # player 2 has 10 sheep at (1, 1), 6 sheep at (3, 3)
+# mapStat[0][0] = 2
+# sheepStat[0][0] = 2
+# mapStat[1][0] = 2
+# sheepStat[1][0] = 1
+# mapStat[0][1] = 2
+# sheepStat[0][1] = 1
 
-init_pos = InitPos(mapStat)
-all_actions  = GameInteraction().get_possible_actions((2, mapStat, sheepStat))
-print(all_actions)
+# init_pos = InitPos(mapStat)
+# all_actions  = GameInteraction().get_possible_actions((2, mapStat, sheepStat))
+# print(all_actions)
