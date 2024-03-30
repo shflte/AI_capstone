@@ -23,28 +23,46 @@ import random
 # implement the step function with MCTS
 
 class GameInteraction:
+    # flip row and column of the game state (mapStat, sheepStat)
+    def flip(self, state):
+        playerID, mapStat, sheepStat = state
+        newMapStat = mapStat.copy()
+        newSheepStat = sheepStat.copy()
+        for i in range(len(mapStat)):
+            for j in range(len(mapStat[0])):
+                newMapStat[j][i] = mapStat[i][j]
+                newSheepStat[j][i] = sheepStat[i][j]
+        return (playerID, newMapStat, newSheepStat)
+
+    # flip action(self, action) to the corresponding action in the flipped state
+    def flip_action(self, action):
+        dir_table = {1: 1, 2: 4, 3: 7, 4: 2, 6: 8, 7: 3, 8: 6, 9: 9}
+        x, y = action[0]
+        m = action[1]
+        dir = action[2]
+        newx, newy = x, y
+        # newx, newy = y, x
+        newdir = dir_table[dir]
+
+        return [(newx, newy), m, newdir]
+
     # possible directions in the game
     def possible_dir(self):
         return [1, 2, 3, 4, 6, 7, 8, 9]
 
     # value of each direction
     def dir_value(self, dir):
-        if dir == 1:
-            return (-1, -1)
-        elif dir == 2:
-            return (-1, 0)
-        elif dir == 3:
-            return (-1, 1)
-        elif dir == 4:
-            return (0, -1)
-        elif dir == 6:
-            return (0, 1)
-        elif dir == 7:
-            return (1, -1)
-        elif dir == 8:
-            return (1, 0)
-        elif dir == 9:
-            return (1, 1)
+        dir_value_table = {
+            1: (-1, -1),
+            2: (-1, 0),
+            3: (-1, 1),
+            4: (0, -1),
+            6: (0, 1),
+            7: (1, -1),
+            8: (1, 0),
+            9: (1, 1)
+        }
+        return dir_value_table[dir]
 
     # probe the direction until reach the boundary of the map or hit something that is not 0
     def probe_direction(self, x, y, dir, mapStat):
@@ -221,16 +239,21 @@ count = 0
 while (count < 30):
     count += 1
     (end_program, id_package, mapStat, sheepStat) = STcpClient.GetBoard()
-    # append the board state to ./state.txt
-    with open('./state.txt', 'a') as f:
-        f.write(str(mapStat) + '\n')
-        f.write(str(sheepStat) + '\n')
-        f.write('\n')
+    # flip the state
+    state = (playerID, mapStat, sheepStat)
 
     if end_program:
         STcpClient._StopConnect()
         break
     Step = GetStep(playerID, mapStat, sheepStat)
+    Step = GameInteraction().flip_action(Step)
+    # append the board state to ./state.txt
+    with open('./state.txt', 'a') as f:
+        f.write(str(mapStat) + '\n')
+        f.write(str(sheepStat) + '\n')
+        f.write(str(Step) + '\n')
+        f.write('\n')
+    # flip the action
 
     STcpClient.SendStep(id_package, Step)
 
