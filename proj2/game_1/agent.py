@@ -34,14 +34,13 @@ class GameInteraction:
                 newSheepStat[j][i] = sheepStat[i][j]
         return (playerID, newMapStat, newSheepStat)
 
-    # flip action(self, action) to the corresponding action in the flipped state
+    # flip direction of the action. x, y remain the same.
     def flip_action(self, action):
         dir_table = {1: 1, 2: 4, 3: 7, 4: 2, 6: 8, 7: 3, 8: 6, 9: 9}
         x, y = action[0]
         m = action[1]
         dir = action[2]
         newx, newy = x, y
-        # newx, newy = y, x
         newdir = dir_table[dir]
 
         return [(newx, newy), m, newdir]
@@ -218,13 +217,13 @@ def InitPos(mapStat):
     return init_pos
 
 def GetStep(playerID, mapStat, sheepStat):
-    # mcts = MCTS((playerID, mapStat, sheepStat))
-    # best_action = mcts.get_action()
-    # step = [(best_action[0], best_action[1]), best_action[2], best_action[3]]
+    mcts = MCTS((playerID, mapStat, sheepStat))
+    best_action = mcts.get_action()
+    step = [(best_action[0], best_action[1]), best_action[2], best_action[3]]
 
     # randomly choose an action
-    all_actions = GameInteraction().get_possible_actions((playerID, mapStat, sheepStat))
-    step = random.choice(all_actions)
+    # all_actions = GameInteraction().get_possible_actions((playerID, mapStat, sheepStat))
+    # step = random.choice(all_actions)
 
     return step
 
@@ -235,9 +234,7 @@ init_pos = InitPos(mapStat)
 STcpClient.SendInitPos(id_package, init_pos)
 
 # start game
-count = 0
-while (count < 30):
-    count += 1
+while (True):
     (end_program, id_package, mapStat, sheepStat) = STcpClient.GetBoard()
     # flip the state
     state = (playerID, mapStat, sheepStat)
@@ -246,6 +243,7 @@ while (count < 30):
         STcpClient._StopConnect()
         break
     Step = GetStep(playerID, mapStat, sheepStat)
+
     Step = GameInteraction().flip_action(Step)
     # append the board state to ./state.txt
     with open('./state.txt', 'a') as f:
@@ -256,21 +254,3 @@ while (count < 30):
     # flip the action
 
     STcpClient.SendStep(id_package, Step)
-
-
-# # generate a toy 12 * 12 toy mapStat
-# mapStat = [[0 for _ in range(12)] for _ in range(12)]
-# # generate a toy 12 * 12 toy sheepStat
-# sheepStat = [[0 for _ in range(12)] for _ in range(12)]
-
-# # player 2 has 10 sheep at (1, 1), 6 sheep at (3, 3)
-# mapStat[0][0] = 2
-# sheepStat[0][0] = 2
-# mapStat[1][0] = 2
-# sheepStat[1][0] = 1
-# mapStat[0][1] = 2
-# sheepStat[0][1] = 1
-
-# init_pos = InitPos(mapStat)
-# all_actions  = GameInteraction().get_possible_actions((2, mapStat, sheepStat))
-# print(all_actions)
