@@ -113,12 +113,12 @@ class GameInteraction:
                     continue
                 for m in range(1, int(sheepStat[i][j])):
                     actions.append([(i, j), m, dir])
-
         return actions
 
 class Node:
-    def __init__(self, state, parent=None):
+    def __init__(self, state, action=None, parent=None):
         self.state = state
+        self.action = action  # action applied to get this node from the parent node
         self.parent = parent
         self.children = []
         self.visits = 0
@@ -141,12 +141,10 @@ class MCTS:
         actions = self.get_possible_actions(node.state)
         for action in actions:
             new_state = self.apply_action(node.state, action)
-            new_node = Node(new_state, node)
+            new_node = Node(new_state, action, node)
             node.children.append(new_node)
-        return random.choice(node.children)
 
     def simulate(self, state):
-
         return random.random()
 
     def backpropagate(self, node, value):
@@ -165,20 +163,14 @@ class MCTS:
         for _ in range(1000):
             selected_node = self.select(root)
             if not selected_node.children:
-                expanded_node = self.expand(selected_node)
-                value = self.simulate(expanded_node.state)
-                self.backpropagate(expanded_node, value)
-            else:
-                value = self.simulate(selected_node.state)
-                self.backpropagate(selected_node, value)
-        best_child = max(root.children, key=lambda n: n.visits)
-        return self.get_best_action(root, best_child)
+                self.expand(selected_node)
+            expanded_node = random.choice(selected_node.children)
+            value = self.simulate(expanded_node.state)
+            self.backpropagate(expanded_node, value)
 
-    def get_best_action(self, root, best_child):
-        for child in root.children:
-            if child == best_child:
-                return self.get_action_from_nodes(root.state, child.state)
-        return None
+        best_child = max(root.children, key=lambda n: n.visits)
+        # best child is the node with the most visits
+        return best_child.action
 
     def get_possible_actions(self, state):
         return GameInteraction().get_possible_actions(state)
@@ -218,15 +210,8 @@ def InitPos(mapStat):
 
 def GetStep(playerID, mapStat, sheepStat):
     mcts = MCTS((playerID, mapStat, sheepStat))
-    best_action = mcts.get_action()
-    step = [(best_action[0], best_action[1]), best_action[2], best_action[3]]
-
-    # randomly choose an action
-    # all_actions = GameInteraction().get_possible_actions((playerID, mapStat, sheepStat))
-    # step = random.choice(all_actions)
-
-    return step
-
+    action = mcts.get_action()
+    return action
 
 # player initial
 (id_package, playerID, mapStat) = STcpClient.GetMap()
@@ -245,8 +230,9 @@ while (True):
     Step = GetStep(playerID, mapStat, sheepStat)
 
     Step = GameInteraction().flip_action(Step)
-    # append the board state to ./state.txt
-    with open('./state.txt', 'a') as f:
+    # # append the board state to ./state.txt
+    # open the file with truncation
+    with open('./state.txt', 'w') as f:
         f.write(str(mapStat) + '\n')
         f.write(str(sheepStat) + '\n')
         f.write(str(Step) + '\n')
