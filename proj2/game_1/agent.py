@@ -115,6 +115,9 @@ class GameInteraction:
                     actions.append([(i, j), m, dir])
         return actions
 
+    def is_leaf(self, state):
+        return not self.get_possible_actions(state)
+
 class Node:
     def __init__(self, state, action=None, parent=None):
         self.state = state
@@ -164,12 +167,12 @@ class MCTS:
             selected_node = self.select(root)
             if not selected_node.children:
                 self.expand(selected_node)
-            expanded_node = random.choice(selected_node.children)
+
+            expanded_node = selected_node if GameInteraction().is_leaf(selected_node.state) else random.choice(selected_node.children)
             value = self.simulate(expanded_node.state)
             self.backpropagate(expanded_node, value)
 
-        best_child = max(root.children, key=lambda n: n.visits)
-        # best child is the node with the most visits
+        best_child = max(root.children, key=lambda n: n.visits) # best child is the node with the most visits
         return best_child.action
 
     def get_possible_actions(self, state):
@@ -227,6 +230,10 @@ while (True):
     (end_program, id_package, mapStat, sheepStat) = STcpClient.GetBoard()
     # flip the state
     state = (playerID, mapStat, sheepStat)
+
+    with open('./state.txt', 'a') as f:
+        # write the number of legal actions
+        f.write(str(len(GameInteraction().get_possible_actions(state))) + '\n')
 
     if end_program:
         STcpClient._StopConnect()
