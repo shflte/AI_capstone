@@ -20,7 +20,6 @@ import random
             4 X 6
             7 8 9
 '''
-# implement the step function with MCTS
 
 class GameInteraction:
     # flip row and column of the game state (mapStat, sheepStat)
@@ -117,8 +116,16 @@ class GameInteraction:
 
         return actions
 
+    # check if the state is leaf
     def is_leaf(self, state):
         return not self.get_possible_actions(state)
+
+    # check if the game is end
+    def is_end(self, state):
+        for i in range(1, 5):
+            if self.get_possible_actions((i, state[1], state[2])):
+                return False
+        return True
 
     def get_winner(self, state):
         # calculate the territory of each player
@@ -164,8 +171,11 @@ class MCTS:
 
     def simulate(self, state):
         # simulate the game until the end
-        while not GameInteraction().is_leaf(state):
+        while not GameInteraction().is_end(state):
             actions = GameInteraction().get_possible_actions(state)
+            if not actions:
+                state = (state[0] % 4 + 1, state[1], state[2])
+                continue
             action = random.choice(actions)
             state = GameInteraction().apply_action(state, action)
         winner = GameInteraction().get_winner(state)
@@ -184,7 +194,7 @@ class MCTS:
 
     def get_action(self):
         root = self.tree.root
-        for _ in range(100):
+        for _ in range(300):
             selected_node = self.select(root)
             if not selected_node.children:
                 self.expand(selected_node)
@@ -214,22 +224,6 @@ def InitPos(mapStat):
     init_pos = [0, 0]
     height, width = len(mapStat), len(mapStat[0])
     
-    # # randomly choose a position on the edge of the map
-    # for i in range(height):
-    #     if mapStat[i][0] == -1:
-    #         init_pos = [i, 0]
-    #         break
-    #     elif mapStat[i][width - 1] == -1:
-    #         init_pos = [i, width - 1]
-    #         break
-    # for j in range(width):
-    #     if mapStat[0][j] == -1:
-    #         init_pos = [0, j]
-    #         break
-    #     elif mapStat[height - 1][j] == -1:
-    #         init_pos = [height - 1, j]
-    #         break
-    
     return init_pos
 
 def GetStep(playerID, mapStat, sheepStat):
@@ -252,10 +246,6 @@ while (True):
     # flip the state
     state = (playerID, mapStat, sheepStat)
 
-    with open('./state.txt', 'a') as f:
-        # write the number of legal actions
-        f.write(str(len(GameInteraction().get_possible_actions(state))) + '\n')
-
     if end_program:
         STcpClient._StopConnect()
         break
@@ -263,10 +253,6 @@ while (True):
 
     Step = GameInteraction().flip_action(Step)
     with open('./state.txt', 'a') as f:
-
-        # f.write(str(mapStat) + '\n')
-        # f.write(str(sheepStat) + '\n')
-        # combine the mapStat and sheepStat so that they appear in the same matrix in pairs
         combined = []
         for i in range(len(mapStat)):
             temp = []
@@ -276,9 +262,7 @@ while (True):
         max_width = max(len(str(item)) for row in combined for item in row)
         for row in combined:
             f.write(' '.join(str(item).ljust(max_width) for item in row) + '\n')
-
         f.write(str(Step) + '\n')
         f.write('\n')
-    # flip the action
 
     STcpClient.SendStep(id_package, Step)
