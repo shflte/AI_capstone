@@ -92,7 +92,9 @@ class GameInteraction:
         newSheepStat[x][y] -= m
         newSheepStat[newx][newy] = m
 
-        return (playerID, newMapStat, newSheepStat)
+        newPlayerID = playerID % 4 + 1
+
+        return (newPlayerID, newMapStat, newSheepStat)
 
     # return all possible actions
     def get_possible_actions(self, state):
@@ -105,18 +107,30 @@ class GameInteraction:
             for j in range(width):
                 if mapStat[i][j] == playerID and int(sheepStat[i][j]) > 1:
                     splitable_sheep.append((i, j))
-        # for each splitable sheep group, generate all possible actions
         for i, j in splitable_sheep:
             for dir in self.possible_dir():
                 newx, newy = self.probe_direction(i, j, dir, mapStat)
                 if newx == i and newy == j:
                     continue
-                for m in range(1, int(sheepStat[i][j])):
-                    actions.append([(i, j), m, dir])
+                m = int(sheepStat[i][j]) // 2
+                actions.append([(i, j), m, dir])
+
         return actions
 
     def is_leaf(self, state):
         return not self.get_possible_actions(state)
+
+    def get_winner(self, state):
+        # calculate the territory of each player
+        playerID, mapStat, sheepStat = state
+        territory = {1: 0, 2: 0, 3: 0, 4: 0}
+        for i in range(len(mapStat)):
+            for j in range(len(mapStat[0])):
+                if 1 <= mapStat[i][j] <= 4:
+                    territory[mapStat[i][j]] += 1
+        # find the player with the largest territory
+        winner = max(territory, key=territory.get)
+        return winner
 
 class Node:
     def __init__(self, state, action=None, parent=None):
@@ -134,6 +148,7 @@ class Tree:
 class MCTS:
     def __init__(self, state):
         self.tree = Tree(state)
+        self.playerID = state[0]
 
     def select(self, node):
         while node.children:
@@ -148,7 +163,13 @@ class MCTS:
             node.children.append(new_node)
 
     def simulate(self, state):
-        return random.random()
+        # simulate the game until the end
+        while not GameInteraction().is_leaf(state):
+            actions = GameInteraction().get_possible_actions(state)
+            action = random.choice(actions)
+            state = GameInteraction().apply_action(state, action)
+        winner = GameInteraction().get_winner(state)
+        return 1 if winner == self.playerID else -1
 
     def backpropagate(self, node, value):
         while node:
@@ -163,7 +184,7 @@ class MCTS:
 
     def get_action(self):
         root = self.tree.root
-        for _ in range(1000):
+        for _ in range(100):
             selected_node = self.select(root)
             if not selected_node.children:
                 self.expand(selected_node)
