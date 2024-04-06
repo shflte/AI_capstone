@@ -42,7 +42,7 @@ def InitPos(mapStat):
 def GetStep(playerID, mapStat, sheepStat):
     # sheep stat is hidden, call mock sheep stat
     mockSheepStat = GameInteraction().mock_sheep_stat((playerID, mapStat, sheepStat))
-    mcts = MCTS((playerID, mapStat, mockSheepStat))
+    mcts = MCTS((playerID, mapStat, mockSheepStat), 3)
     action = mcts.get_action()
     action = GameInteraction().flip_action(action)
     return action
