@@ -20,6 +20,7 @@ class MCTS:
         self.tree = Tree(state)
         self.playerID = state[0]
         self.game_setting_id = game_setting_id
+        self.iterations = 100 if game_setting_id == 2 else 300
 
     def select(self, node):
         while node.children:

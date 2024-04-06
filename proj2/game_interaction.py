@@ -1,8 +1,9 @@
 import numpy as np
+import random
 
 class GameInteraction:
     # flip row and column of the game state (mapStat, sheepStat)
-    def flip(self, state):
+    def flip_board(self, state):
         playerID, mapStat, sheepStat = state
         newMapStat = mapStat.copy()
         newSheepStat = sheepStat.copy()
@@ -11,6 +12,10 @@ class GameInteraction:
                 newMapStat[j][i] = mapStat[i][j]
                 newSheepStat[j][i] = sheepStat[i][j]
         return (playerID, newMapStat, newSheepStat)
+
+    def flip_pos(self, pos):
+        x, y = pos
+        return (y, x)
 
     # flip direction of the action. x, y remain the same.
     def flip_action(self, action):
@@ -40,6 +45,62 @@ class GameInteraction:
             9: (1, 1)
         }
         return dir_value_table[dir]
+
+    def check_valid_init(self, mapStat, init_pos): 
+        x, y = init_pos
+
+        if mapStat[x][y] != 0:
+            return False
+
+        extended_map = np.pad(mapStat, pad_width=1, mode='constant', constant_values=0)
+        window = extended_map[x:x+3, y:y+3]
+        return not np.any(window == -1)
+
+    def on_board(self, x, y, board_size):
+        return (x >= 0) and (x < board_size) and (y >= 0) and (y < board_size)
+
+    def get_init_pos(self, mapStat, board_size=12):
+        directions = [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1),           (0, 1),
+            (1, -1),  (1, 0),  (1, 1)
+        ]
+        directions_second_layer = [
+            (-2, -2), (-2, -1), (-2, 0), (-2, 1), (-2, 2),
+            (-1, -2),                             (-1, 2),
+            (0, -2),                              (0, 2),
+            (1, -2),                              (1, 2),
+            (2, -2), (2, -1), (2, 0), (2, 1), (2, 2)
+        ]
+
+        max_count = -1
+        best_init_pos = [0, 0]
+
+        for i in range(board_size):
+            for j in range(board_size):
+                init_pos = [i, j]
+
+                if not self.check_valid_init(mapStat, init_pos):
+                    continue
+
+                cnt_first_layer = 0
+                for dx, dy in directions:
+                    nx, ny = init_pos[0] + dx, init_pos[1] + dy
+                    if self.on_board(nx, ny, board_size) and mapStat[nx][ny] == 0:
+                        cnt_first_layer += 1
+
+                cnt_second_layer = 0
+                for dx, dy in directions_second_layer:
+                    nx, ny = init_pos[0] + dx, init_pos[1] + dy
+                    if self.on_board(nx, ny, board_size) and mapStat[nx][ny] == 0:
+                        cnt_second_layer += 1
+
+                total_count = cnt_first_layer + cnt_second_layer
+                if total_count > max_count:
+                    max_count = total_count
+                    best_init_pos = init_pos
+
+        return best_init_pos
 
     # probe the direction until reach the boundary of the map or hit something that is not 0
     def probe_direction(self, x, y, dir, mapStat):
