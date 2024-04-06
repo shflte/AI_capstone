@@ -163,19 +163,37 @@ class GameInteraction:
                     territory[mapStat[i][j]] += 1
         return territory
 
+    def dfs(self, mapStat, playerID, visited, i, j):
+        if i < 0 or i >= 12 or j < 0 or j >= 12 or visited[i][j] or mapStat[i][j] != playerID:
+            return 0
+        visited[i][j] = True
+        return 1 + self.dfs(mapStat, playerID, visited, i - 1, j) \
+            + self.dfs(mapStat, playerID, visited, i + 1, j) \
+            + self.dfs(mapStat, playerID, visited, i, j - 1) \
+            + self.dfs(mapStat, playerID, visited, i, j + 1)
+
+    def get_connected_regions(self, mapStat, playerID):
+        connected_regions = []
+        visited = [[False for _ in range(12)] for _ in range(12)]
+        for i in range(12):
+            for j in range(12):
+                if mapStat[i][j] == playerID and not visited[i][j]:
+                    connected_regions.append(self.dfs(mapStat, playerID, visited, i, j))
+        return connected_regions
+
+    def get_player_score(self, state):
+        playerID, mapStat, sheepStat = state
+        regions = self.get_connected_regions(mapStat, playerID)
+        return round(sum([region ** 1.25 for region in regions]))
+
     def get_winner(self, state):
         playerID, mapStat, sheepStat = state
-        territory = self.get_territory(mapStat)
-        max_territory = max(territory.values())
-        winners = [k for k, v in territory.items() if v == max_territory]
-        return winners[0]
+        scores = [self.get_player_score((i, mapStat, sheepStat)) for i in range(1, 5)]
+        return scores.index(max(scores)) + 1
 
     def get_winning_team(self, state):
-        playerID, mapStat, sheepStat = state
-        territory = self.get_territory(mapStat)
-        team1 = territory[1] + territory[3]
-        team2 = territory[2] + territory[4]
-        return 1 if team1 > team2 else 2
+        scores = [self.get_player_score((i, state[1], state[2])) for i in range(1, 5)]
+        return 1 if scores[0] + scores[2] > scores[1] + scores[3] else 2
 
     # generate mock sheepStat for game setting 3
     def mock_sheep_stat(self, state):
