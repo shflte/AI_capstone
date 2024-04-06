@@ -41,6 +41,7 @@ def GetStep(playerID, mapStat, sheepStat):
     mockSheepStat = GameInteraction().mock_sheep_stat(mapStat)
     mcts = MCTS((playerID, mapStat, mockSheepStat))
     action = mcts.get_action()
+    action = GameInteraction().flip_action(action)
     return action
 
 # player initial

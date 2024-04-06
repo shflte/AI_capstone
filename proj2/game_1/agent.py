@@ -1,4 +1,7 @@
 import STcpClient
+
+import sys
+sys.path.append('..')
 from MCTS import MCTS
 from game_interaction import GameInteraction
 
@@ -38,6 +41,7 @@ def InitPos(mapStat):
 def GetStep(playerID, mapStat, sheepStat):
     mcts = MCTS((playerID, mapStat, sheepStat))
     action = mcts.get_action()
+    action = GameInteraction().flip_action(action)
     return action
 
 # player initial
