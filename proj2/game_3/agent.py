@@ -1,5 +1,8 @@
 import STcpClient
 import numpy as np
+
+import sys
+sys.path.append('..')
 from MCTS import MCTS
 from game_interaction import GameInteraction
 
@@ -38,7 +41,7 @@ def InitPos(mapStat):
 
 def GetStep(playerID, mapStat, sheepStat):
     # sheep stat is hidden, call mock sheep stat
-    mockSheepStat = GameInteraction().mock_sheep_stat(mapStat)
+    mockSheepStat = GameInteraction().mock_sheep_stat((playerID, mapStat, sheepStat))
     mcts = MCTS((playerID, mapStat, mockSheepStat))
     action = mcts.get_action()
     action = GameInteraction().flip_action(action)
