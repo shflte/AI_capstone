@@ -60,17 +60,12 @@ class GameInteraction:
         return (x >= 0) and (x < board_size) and (y >= 0) and (y < board_size)
 
     def get_init_pos(self, mapStat, board_size=12):
-        directions = [
-            (-1, -1), (-1, 0), (-1, 1),
-            (0, -1),           (0, 1),
-            (1, -1),  (1, 0),  (1, 1)
-        ]
-        directions_second_layer = [
+        surroundings = [
             (-2, -2), (-2, -1), (-2, 0), (-2, 1), (-2, 2),
-            (-1, -2),                             (-1, 2),
-            (0, -2),                              (0, 2),
-            (1, -2),                              (1, 2),
-            (2, -2), (2, -1), (2, 0), (2, 1), (2, 2)
+            (-1, -2), (-1, -1), (-1, 0), (-1, 1), (-1, 2),
+            (0, -2),  (0, -1),           (0, 1),  (0, 2),
+            (1, -2),  (1, -1),  (1, 0),  (1, 1),  (1, 2),
+            (2, -2),  (2, -1),  (2, 0),  (2, 1),  (2, 2)
         ]
 
         max_count = -1
@@ -83,21 +78,14 @@ class GameInteraction:
                 if not self.check_valid_init(mapStat, init_pos):
                     continue
 
-                cnt_first_layer = 0
-                for dx, dy in directions:
+                count = 0
+                for dx, dy in surroundings:
                     nx, ny = init_pos[0] + dx, init_pos[1] + dy
                     if self.on_board(nx, ny, board_size) and mapStat[nx][ny] == 0:
-                        cnt_first_layer += 1
+                        count += 1
 
-                cnt_second_layer = 0
-                for dx, dy in directions_second_layer:
-                    nx, ny = init_pos[0] + dx, init_pos[1] + dy
-                    if self.on_board(nx, ny, board_size) and mapStat[nx][ny] == 0:
-                        cnt_second_layer += 1
-
-                total_count = cnt_first_layer + cnt_second_layer
-                if total_count > max_count:
-                    max_count = total_count
+                if count > max_count:
+                    max_count = count
                     best_init_pos = init_pos
 
         return best_init_pos
