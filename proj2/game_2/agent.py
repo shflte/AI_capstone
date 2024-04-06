@@ -6,9 +6,8 @@ from MCTS import MCTS
 from game_interaction import GameInteraction
 
 def InitPos(mapStat):
-    init_pos = [0, 0]
-    height, width = len(mapStat), len(mapStat[0])
-
+    init_pos = GameInteraction().get_init_pos(mapStat, 15)
+    init_pos = GameInteraction().flip_pos(init_pos)
     return init_pos
 
 def GetStep(playerID, mapStat, sheepStat):
