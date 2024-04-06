@@ -39,7 +39,7 @@ def InitPos(mapStat):
     return init_pos
 
 def GetStep(playerID, mapStat, sheepStat):
-    mcts = MCTS((playerID, mapStat, sheepStat))
+    mcts = MCTS((playerID, mapStat, sheepStat), 1)
     action = mcts.get_action()
     action = GameInteraction().flip_action(action)
     return action

@@ -16,9 +16,10 @@ class Tree:
         self.root = Node(state)
 
 class MCTS:
-    def __init__(self, state):
+    def __init__(self, state, game_setting_id):
         self.tree = Tree(state)
         self.playerID = state[0]
+        self.game_setting_id = game_setting_id
 
     def select(self, node):
         while node.children:
@@ -41,8 +42,14 @@ class MCTS:
                 continue
             action = random.choice(actions)
             state = GameInteraction().apply_action(state, action)
-        winner = GameInteraction().get_winner(state)
-        return 1 if winner == self.playerID else -1
+
+        if self.game_setting_id == 4:
+            player_team = 1 if self.playerID in [1, 3] else 2
+            winning_team = GameInteraction().get_winning_team(state)
+            return 1 if player_team == winning_team else -1
+        else:
+            winner = GameInteraction().get_winner(state)
+            return 1 if winner == self.playerID else -1
 
     def backpropagate(self, node, value):
         while node:

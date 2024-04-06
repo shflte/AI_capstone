@@ -121,8 +121,16 @@ class GameInteraction:
         winners = [k for k, v in territory.items() if v == max_territory]
         return winners[0]
 
+    def get_winning_team(self, state):
+        playerID, mapStat, sheepStat = state
+        territory = self.get_territory(mapStat)
+        team1 = territory[1] + territory[3]
+        team2 = territory[2] + territory[4]
+        return 1 if team1 > team2 else 2
+
     # generate mock sheepStat for game setting 3
-    def mock_sheep_stat(self, mapStat):
+    def mock_sheep_stat(self, state):
+        playerID, mapStat, sheepStat = state
         territory = self.get_territory(mapStat)
         sheepDict = {}
         for i in range(1, 5):
@@ -131,12 +139,12 @@ class GameInteraction:
             remainder = 16 % length
             sheepDict[i] = [base + 1 if i < remainder else base for i in range(length)]
 
-        mockSheepStat = np.zeros((12, 12))
+        mockSheepStat = sheepStat.copy()
         # assign sheep to each player's territory
+        # skip the "playerID" player's assignment since the player's sheepStat is already known
         for i in range(12):
             for j in range(12):
-                if 1 <= mapStat[i][j] <= 4:
-                    playerID = mapStat[i][j]
-                    mockSheepStat[i][j] = sheepDict[playerID].pop()
+                if 1 <= mapStat[i][j] <= 4 and mapStat[i][j] != playerID:
+                    mockSheepStat[i][j] = sheepDict[mapStat[i][j]].pop()
 
         return mockSheepStat
