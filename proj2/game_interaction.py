@@ -54,7 +54,7 @@ class GameInteraction:
 
         extended_map = np.pad(mapStat, pad_width=1, mode='constant', constant_values=0)
         window = extended_map[x:x+3, y:y+3]
-        return not np.any(window == -1)
+        return np.any(window == -1)
 
     def on_board(self, x, y, board_size):
         return (x >= 0) and (x < board_size) and (y >= 0) and (y < board_size)
