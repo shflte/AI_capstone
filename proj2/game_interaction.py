@@ -2,6 +2,9 @@ import numpy as np
 import random
 
 class GameInteraction:
+    def __init__(self, board_size=12):
+        self.board_size = board_size
+
     # flip row and column of the game state (mapStat, sheepStat)
     def flip_board(self, state):
         playerID, mapStat, sheepStat = state
@@ -52,7 +55,7 @@ class GameInteraction:
         if mapStat[x][y] != 0:
             return False
 
-        extended_map = np.pad(mapStat, pad_width=1, mode='constant', constant_values=0)
+        extended_map = np.pad(mapStat.copy(), pad_width=1, mode='constant', constant_values=0)
         window = extended_map[x:x+3, y:y+3]
         return np.any(window == -1)
 
@@ -164,7 +167,7 @@ class GameInteraction:
         return territory
 
     def dfs(self, mapStat, playerID, visited, i, j):
-        if i < 0 or i >= 12 or j < 0 or j >= 12 or visited[i][j] or mapStat[i][j] != playerID:
+        if i < 0 or i >= self.board_size or j < 0 or j >= self.board_size or visited[i][j] or mapStat[i][j] != playerID:
             return 0
         visited[i][j] = True
         return 1 + self.dfs(mapStat, playerID, visited, i - 1, j) \
@@ -174,9 +177,9 @@ class GameInteraction:
 
     def get_connected_regions(self, mapStat, playerID):
         connected_regions = []
-        visited = [[False for _ in range(12)] for _ in range(12)]
-        for i in range(12):
-            for j in range(12):
+        visited = [[False for _ in range(self.board_size)] for _ in range(self.board_size)]
+        for i in range(self.board_size):
+            for j in range(self.board_size):
                 if mapStat[i][j] == playerID and not visited[i][j]:
                     connected_regions.append(self.dfs(mapStat, playerID, visited, i, j))
         return connected_regions
@@ -208,9 +211,8 @@ class GameInteraction:
 
         mockSheepStat = sheepStat.copy()
         # assign sheep to each player's territory
-        # skip the "playerID" player's assignment since the player's sheepStat is already known
-        for i in range(12):
-            for j in range(12):
+        for i in range(self.board_size):
+            for j in range(self.board_size):
                 if 1 <= mapStat[i][j] <= 4 and mapStat[i][j] != playerID:
                     mockSheepStat[i][j] = sheepDict[mapStat[i][j]].pop()
 

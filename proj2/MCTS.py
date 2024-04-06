@@ -21,6 +21,7 @@ class MCTS:
         self.playerID = state[0]
         self.game_setting_id = game_setting_id
         self.iterations = 100 if game_setting_id == 2 else 300
+        self.game_interaction = GameInteraction(15 if self.game_setting_id == 2 else 12)
 
     def select(self, node):
         while node.children:
@@ -36,20 +37,20 @@ class MCTS:
 
     def simulate(self, state):
         # simulate the game until the end
-        while not GameInteraction().is_end(state):
-            actions = GameInteraction().get_possible_actions(state)
+        while not self.game_interaction.is_end(state):
+            actions = self.game_interaction.get_possible_actions(state)
             if not actions:
                 state = (state[0] % 4 + 1, state[1], state[2])
                 continue
             action = random.choice(actions)
-            state = GameInteraction().apply_action(state, action)
+            state = self.game_interaction.apply_action(state, action)
 
         if self.game_setting_id == 4:
             player_team = 1 if self.playerID in [1, 3] else 2
-            winning_team = GameInteraction().get_winning_team(state)
+            winning_team = self.game_interaction.get_winning_team(state)
             return 1 if player_team == winning_team else -1
         else:
-            winner = GameInteraction().get_winner(state)
+            winner = self.game_interaction.get_winner(state)
             return 1 if winner == self.playerID else -1
 
     def backpropagate(self, node, value):
@@ -70,7 +71,7 @@ class MCTS:
             if not selected_node.children:
                 self.expand(selected_node)
 
-            expanded_node = selected_node if GameInteraction().is_leaf(selected_node.state) else random.choice(selected_node.children)
+            expanded_node = selected_node if self.game_interaction.is_leaf(selected_node.state) else random.choice(selected_node.children)
             value = self.simulate(expanded_node.state)
             self.backpropagate(expanded_node, value)
 
@@ -78,7 +79,7 @@ class MCTS:
         return best_child.action
 
     def get_possible_actions(self, state):
-        return GameInteraction().get_possible_actions(state)
+        return self.game_interaction.get_possible_actions(state)
 
     def apply_action(self, state, action):
-        return GameInteraction().apply_action(state, action)
+        return self.game_interaction.apply_action(state, action)
