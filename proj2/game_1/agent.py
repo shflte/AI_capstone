@@ -236,33 +236,12 @@ def GetStep(playerID, mapStat, sheepStat):
 init_pos = InitPos(mapStat)
 STcpClient.SendInitPos(id_package, init_pos)
 
-# clear the state.txt
-with open('./state.txt', 'w') as f:
-    f.write('')
-
 # start game
 while (True):
     (end_program, id_package, mapStat, sheepStat) = STcpClient.GetBoard()
-    # flip the state
-    state = (playerID, mapStat, sheepStat)
-
     if end_program:
         STcpClient._StopConnect()
         break
     Step = GetStep(playerID, mapStat, sheepStat)
-
-    Step = GameInteraction().flip_action(Step)
-    with open('./state.txt', 'a') as f:
-        combined = []
-        for i in range(len(mapStat)):
-            temp = []
-            for j in range(len(mapStat[0])):
-                temp.append((mapStat[i][j], sheepStat[i][j]))
-            combined.append(temp)
-        max_width = max(len(str(item)) for row in combined for item in row)
-        for row in combined:
-            f.write(' '.join(str(item).ljust(max_width) for item in row) + '\n')
-        f.write(str(Step) + '\n')
-        f.write('\n')
 
     STcpClient.SendStep(id_package, Step)
