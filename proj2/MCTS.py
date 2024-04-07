@@ -66,7 +66,7 @@ class MCTS:
 
     def get_action(self):
         root = self.tree.root
-        for _ in range(300):
+        for _ in range(self.iterations):
             selected_node = self.select(root)
             if not selected_node.children:
                 self.expand(selected_node)
