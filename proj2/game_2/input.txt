@@ -1,7 +1,7 @@
 1
 ./sample/Sample_1.exe
 2
-./dist/agent.exe
+./agent.exe
 3
 ./sample/Sample_3.exe
 4
