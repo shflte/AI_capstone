@@ -1,6 +1,10 @@
 '''
     Copyright © 2019 by Phillip Chang
 '''
+'''
+    Team 23 : 前物連網無念容
+    Members : 109550100 陳宇駿 109550085 陳欣妤 109550106 涂圓緣
+'''
 import struct
 import socket
 from numpy import zeros, array

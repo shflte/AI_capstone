@@ -3,7 +3,7 @@
 2
 ./sample/Sample_2.exe
 3
-./agent.exe
+./team23_agent3.exe
 4
 ./sample/Sample_4.exe
 3
