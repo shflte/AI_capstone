@@ -6,4 +6,4 @@
 ./team23_agent3.exe
 4
 ./sample/Sample_4.exe
-23
+3
